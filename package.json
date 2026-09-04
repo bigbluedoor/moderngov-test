@@ -1,0 +1,35 @@
+{
+  "name": "@bigbluedoor/moderngov-test",
+  "version": "1.0.0",
+  "description": "Utility package usefull to test moderngov template implementation.",
+  "main": "index.js",
+  "bin": {
+    "moderngov-test": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bigbluedoor/moderngov-test.git"
+  },
+  "keywords": [
+    "moderngov",
+    "localgov",
+    "drupal",
+    "template"
+  ],
+  "author": "Marco Pagliarulo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bigbluedoor/moderngov-test/issues"
+  },
+  "homepage": "https://github.com/bigbluedoor/moderngov-test#readme",
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "commander": "^15.0.0",
+    "express": "^5.2.1"
+  }
+}
