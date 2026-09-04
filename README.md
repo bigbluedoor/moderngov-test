@@ -67,6 +67,10 @@ cp config.json.dist config.json
 | `sidenavSelector` | no | CSS selector for the side navigation on the live site. |
 | `moderngovAssets` | no | List of ModernGov assets (CSS/JS) to inject into the template `<head>`. |
 
+***NOTE:*** moderngovAssets is not strictly required because the app autodiscover
+the assets delivered from ModernGov. This setting is useful when autodiscovery
+do not work properly.
+
 `config.json` lives at the package root, next to `config.json.dist`. The file is
 optional — every value can also be passed inline, and inline options always win
 over the ones in the file. Selectors that are left empty simply render as an

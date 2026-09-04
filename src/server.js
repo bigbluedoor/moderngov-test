@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { extractSections, injectAssets, renderTemplate } from './transform.js';
+import { autoInjectAssets, extractSections, injectAssets, renderTemplate } from './transform.js';
 
 const DEFAULT_PORT = 8000;
 
@@ -58,7 +58,9 @@ export const createApp = (options) => {
         );
       }
 
-      const sections = extractSections(await remote.text(), {
+      const remoteHtml = await remote.text();
+
+      const sections = extractSections(remoteHtml, {
         moderngovUrl: options.moderngovUrl,
         localBase,
         selectors: {
@@ -69,10 +71,16 @@ export const createApp = (options) => {
         },
       });
 
-      const html = renderTemplate(
-        injectAssets(await template.text(), options.moderngovAssets, options.moderngovUrl),
-        sections
-      );
+      const templateHtml = await template.text();
+
+      const withAutoAssets = autoInjectAssets(
+        templateHtml,
+        remoteHtml,
+        options.moderngovUrl
+      )
+      const withAssets = injectAssets(withAutoAssets, options.moderngovAssets, options.moderngovUrl);
+
+      const html = renderTemplate(withAssets, sections);
 
       res.status(200).type('html').send(html);
     } catch (error) {

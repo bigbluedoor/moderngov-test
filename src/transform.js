@@ -127,6 +127,25 @@ const assetTag = (url) =>
     : `<link rel="stylesheet" href="${url}">`;
 
 /**
+ * Auto Injects the ModernGov assets into the local template's <head>.
+ */
+export const autoInjectAssets = (html, remoteHtml, moderngovUrl) => {
+  const $ = cheerio.load(remoteHtml);
+  const assets = [];
+  $('link[rel][href], script[src]').each((_, element) => {
+    const isScript = element.tagName.toLowerCase() === 'script';
+
+    const value = $(element).attr(isScript ? 'src' : 'href');
+    if (!isNavigable(value)) return;
+
+    const url = resolve(value, moderngovUrl);
+    if (url) assets.push(url.toString());
+  });
+
+  return injectAssets(html, assets.filter(v => v.startsWith(moderngovUrl)), moderngovUrl);
+}
+
+/**
  * Injects the optional ModernGov assets into the local template's <head>.
  */
 export const injectAssets = (html, assets, moderngovUrl) => {
