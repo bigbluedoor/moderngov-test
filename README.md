@@ -14,15 +14,26 @@ ModernGov content wrapped in your local template, with links rewritten so you
 can keep clicking around without leaving the test app.
 
 ## Installation
+```bash
+git clone git@github.com:bigbluedoor/moderngov-test.git
+```
 
 ```bash
 npm install
 ```
 
-Or run it straight from the repository as a CLI:
+```bash
+npm start -- --help
+```
 
+Or use NPM link to run it straight from the repository as a CLI:
+Run once
 ```bash
 npm link
+```
+
+Then
+```bash
 moderngov-test --help
 ```
 
