@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 
-import { resolveOptions } from './src/config.js';
-import { createApp, listen } from './src/server.js';
+import { resolveOptions, type CliOptions, type Options } from './config.js';
+import { createApp, listen, portOf } from './server.js';
+import { errorMessage } from './utils.js';
 
 program
   .name('moderngov-test')
@@ -18,25 +19,25 @@ program
   .option('--contentSelector <selector>', 'The css selector of the element containing the content on the live ModernGov site.')
   .option('--sidenavSelector <selector>', 'The css selector of the element containing the sidenav on the live ModernGov site.')
   .option('--moderngovAssets <assets>', 'Comma separated list of moderngov assets, e.g. css and js.')
-  .action(async (cliOptions) => {
-    let options;
+  .action(async (cliOptions: CliOptions) => {
+    let options: Options;
 
     try {
       options = resolveOptions(cliOptions);
     } catch (error) {
-      program.error(error.message, { exitCode: 1 });
+      // program.error() exits, so nothing below runs on a bad config.
+      program.error(errorMessage(error), { exitCode: 1 });
     }
 
     try {
       const server = await listen(createApp(options));
-      const { port } = server.address();
 
-      console.log(`moderngov-test is running on http://localhost:${port}`);
+      console.log(`moderngov-test is running on http://localhost:${String(portOf(server))}`);
       console.log(`  ModernGov site:  ${options.moderngovUrl}`);
       console.log(`  Local template:  ${options.localDevUrl}`);
     } catch (error) {
-      program.error(`Unable to start the server: ${error.message}`, { exitCode: 1 });
+      program.error(`Unable to start the server: ${errorMessage(error)}`, { exitCode: 1 });
     }
   });
 
-program.parse();
+await program.parseAsync();

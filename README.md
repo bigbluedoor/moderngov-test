@@ -210,6 +210,35 @@ requests carrying a `__VIEWSTATE` field. These are proxied too:
   `502` with the underlying error message, and the error is also logged to the
   console.
 
+## Development
+
+The source lives in `src/` and is compiled to `dist/`, which is what the `bin`
+entry and `main` point at. `dist/` is generated — never edit it, and never
+commit it.
+
+| Command | Does |
+| --- | --- |
+| `npm run build` | Compiles `src/` to `dist/` and makes the CLI executable. |
+| `npm run dev` | Same, in watch mode. |
+| `npm run typecheck` | Types only, no output. |
+| `npm run lint` | ESLint, including the type-aware rules. |
+| `npm run lint:fix` | The same, applying the fixes it can. |
+| `npm run clean` | Removes `dist/`. |
+
+`npm start` builds first, so it always runs current code. `npm install` and
+`npm link` build too, via `prepare` — the CLI works straight after linking.
+
+TypeScript is configured for Node ESM (`module: nodenext`), which means
+**relative imports keep the `.js` extension even in `.ts` files**:
+
+```ts
+import { isEmpty } from './utils.js'; // resolves to ./utils.ts, emits ./utils.js
+```
+
+ESLint runs typescript-eslint's type-aware rules over `src/`. The only
+JavaScript left in the repo is tooling — `eslint.config.js` itself — which sits
+outside the tsconfig project and is linted without those rules.
+
 ## License
 
 ISC © Marco Pagliarulo
