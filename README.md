@@ -159,7 +159,7 @@ for example
 
 ## How it works
 
-For every incoming `GET` request:
+For every incoming request:
 
 1. The same path is requested from `moderngovUrl` with
    [impit](https://github.com/apify/impit), which impersonates Chrome. A plain
@@ -169,18 +169,38 @@ For every incoming `GET` request:
    live site.
 3. The HTML is parsed with [cheerio](https://cheerio.js.org/) and the configured
    selectors are extracted.
-4. URLs inside the extracted snippets are rewritten: links to pages on the live
-   ModernGov site point back at `localhost` so browsing stays inside the test
-   app, while assets, external links and form actions are absolutised against
-   the live site.
+4. URLs inside the extracted snippets are rewritten: links and form actions
+   pointing at the live ModernGov site come back to `localhost` so browsing
+   stays inside the test app, while assets and external links are absolutised
+   against the live site.
 5. The template from `localDevUrl` is fetched, the ModernGov stylesheets and
    scripts found on the live page are injected into its `<head>` (plus anything
    listed in `moderngovAssets`), and the placeholders are replaced.
 
+### Form postbacks
+
+ModernGov is ASP.NET WebForms, so searches, filters and paging are `POST`
+requests carrying a `__VIEWSTATE` field. These are proxied too:
+
+- the raw body is forwarded byte for byte with its original content type, so
+  `__VIEWSTATE` and file uploads survive intact;
+- one HTTP client is shared for the life of the process, so the ASP.NET session
+  cookie is kept between requests;
+- ASP.NET answers most postbacks with a redirect — the browser is sent on to
+  the local URL for the new page, so the address bar keeps up;
+- when a postback returns something that is not a page (an iCal feed, a
+  generated PDF), the bytes are passed through with their `Content-Type` and
+  `Content-Disposition` rather than redirected, since a browser cannot replay
+  the `POST` against the live site.
+
 ## Notes and limitations
 
-- Only `GET` and `HEAD` requests are served; anything else returns `405`. Form
-  postbacks are left pointing at the live ModernGov site.
+- Only `GET`, `HEAD` and `POST` requests are served; anything else returns
+  `405`.
+- Request bodies are capped at 25 MB.
+- The ASP.NET session is shared by every browser pointed at the test app. That
+  is fine for one developer, but two people browsing the same instance will
+  tread on each other's postbacks.
 - TLS certificate verification is disabled (`ignoreTlsErrors`) so that local
   development sites with self-signed certificates (Lando, DDEV, …) can be used
   as the template source. This is a development-only tool — do not deploy it.

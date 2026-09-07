@@ -54,6 +54,7 @@ const impit = new Impit({
 });
 
 /**
- * Fetches a page with the shared browser-impersonating client.
+ * Fetches a page with the shared browser-impersonating client. `init` takes the
+ * same shape as the one fetch() accepts: method, headers, body, redirect.
  */
-export const fetchPage = (url) => impit.fetch(url);
+export const fetchPage = (url, init) => impit.fetch(url, init);

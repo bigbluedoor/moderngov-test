@@ -13,28 +13,33 @@ const ASSET_ATTRIBUTES = ['src', 'poster', 'data-src'];
  *   browsing stays inside the test app;
  * - everything else is absolutised against the live site.
  */
-const rewriteUrls = ($, moderngovUrl, localBase) => {
+const rewriteUrls = ($, { moderngovUrl, localBase, pageUrl }) => {
+  // Relative URLs are resolved against the page they came from; only the
+  // decision of what counts as "the live site" uses moderngovUrl.
+  const base = pageUrl || moderngovUrl;
+
+  const toLocal = (url) => `${localBase}${url.pathname}${url.search}${url.hash}`;
+
   $('a[href]').each((_, element) => {
     const href = $(element).attr('href');
     if (!isNavigable(href)) return;
 
-    const url = resolveUrl(href, moderngovUrl);
+    const url = resolveUrl(href, base);
     if (!url) return;
 
-    if (isSameSite(url, moderngovUrl)) {
-      $(element).attr('href', `${localBase}${url.pathname}${url.search}${url.hash}`);
-    } else {
-      $(element).attr('href', url.toString());
-    }
+    $(element).attr('href', isSameSite(url, moderngovUrl) ? toLocal(url) : url.toString());
   });
 
   $('form[action]').each((_, element) => {
     const action = $(element).attr('action');
     if (!isNavigable(action)) return;
 
-    // Postbacks are left on the live site: the test app only serves GET pages.
-    const url = resolveUrl(action, moderngovUrl);
-    if (url) $(element).attr('action', url.toString());
+    const url = resolveUrl(action, base);
+    if (!url) return;
+
+    // Postbacks are proxied too, so a form that submits to the live site keeps
+    // pointing at the local server.
+    $(element).attr('action', isSameSite(url, moderngovUrl) ? toLocal(url) : url.toString());
   });
 
   for (const attribute of ASSET_ATTRIBUTES) {
@@ -42,13 +47,13 @@ const rewriteUrls = ($, moderngovUrl, localBase) => {
       const value = $(element).attr(attribute);
       if (!isNavigable(value)) return;
 
-      const url = resolveUrl(value, moderngovUrl);
+      const url = resolveUrl(value, base);
       if (url) $(element).attr(attribute, url.toString());
     });
   }
 
   $('link[href]').each((_, element) => {
-    const url = resolveUrl($(element).attr('href'), moderngovUrl);
+    const url = resolveUrl($(element).attr('href'), base);
     if (url) $(element).attr('href', url.toString());
   });
 
@@ -58,7 +63,7 @@ const rewriteUrls = ($, moderngovUrl, localBase) => {
       .split(',')
       .map((candidate) => {
         const [value, ...descriptors] = candidate.trim().split(/\s+/);
-        const url = resolveUrl(value, moderngovUrl);
+        const url = resolveUrl(value, base);
         return [url ? url.toString() : value, ...descriptors].join(' ');
       })
       .join(', ');
@@ -71,7 +76,7 @@ const rewriteUrls = ($, moderngovUrl, localBase) => {
  * Pulls the breadcrumb, content and sidenav out of a live ModernGov page and
  * rewrites their URLs for local browsing.
  */
-export const extractSections = (html, { moderngovUrl, localBase, selectors }) => {
+export const extractSections = (html, { moderngovUrl, localBase, pageUrl, selectors }) => {
   const $ = cheerio.load(html);
   const sections = {};
 
@@ -97,7 +102,7 @@ export const extractSections = (html, { moderngovUrl, localBase, selectors }) =>
       false
     );
 
-    rewriteUrls(snippet, moderngovUrl, localBase);
+    rewriteUrls(snippet, { moderngovUrl, localBase, pageUrl });
     sections[name] = snippet.html();
   }
 
