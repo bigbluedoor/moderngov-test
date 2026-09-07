@@ -47,8 +47,8 @@ cp config.json.dist config.json
 
 ```json
 {
-  "moderngovUrl": "https://westsussex.moderngov.co.uk",
-  "localDevUrl": "https://west-sussex-lgd.lndo.site/moderngov-template",
+  "moderngovUrl": "https://example.moderngov.co.uk",
+  "localDevUrl": "https://example.lndo.site/moderngov-template",
   "pagetitleSelector": "",
   "breadcrumbSelector": ".nav--breadcrumbs ol",
   "contentSelector": "article.editor-content",
@@ -67,14 +67,36 @@ cp config.json.dist config.json
 | `sidenavSelector` | no | CSS selector for the side navigation on the live site. |
 | `moderngovAssets` | no | List of ModernGov assets (CSS/JS) to inject into the template `<head>`. |
 
-***NOTE:*** moderngovAssets is not strictly required because the app autodiscover
-the assets delivered from ModernGov. This setting is useful when autodiscovery
-do not work properly.
+***NOTE:*** `moderngovAssets` is rarely needed: the app autodiscovers the assets
+delivered by ModernGov on the fetched page. Use this setting when autodiscovery
+misses something.
 
-`config.json` lives at the package root, next to `config.json.dist`. The file is
-optional — every value can also be passed inline, and inline options always win
-over the ones in the file. Selectors that are left empty simply render as an
-empty string.
+The file is optional — every value can also be passed inline, and inline options
+always win over the ones in the file. Selectors that are left empty simply
+render as an empty string.
+
+### Where the config file is read from
+
+By default the tool looks for `config.json` at the package root, next to
+`config.json.dist`. A different file can be pointed at with `-c` / `--config`,
+which is a CLI-only option (it has no meaning inside the JSON):
+
+```bash
+moderngov-test --config /Users/me/sites/example.moderngov.json
+```
+
+This is the practical way to keep one config per site outside the package —
+handy when `moderngov-test` is installed globally via `npm link`.
+
+Absolute paths are used as given; relative paths are resolved from the directory
+you run the command in, so this works from anywhere:
+
+```bash
+moderngov-test --config ./westsussex.moderngov.json
+```
+
+A `--config` path that does not exist is ignored silently, so a typo shows up as
+a "missing required option" error rather than a "file not found" one.
 
 ## Template placeholders
 
@@ -104,12 +126,18 @@ npx moderngov-test
 npm start
 ```
 
+With a config file kept somewhere else:
+
+```bash
+npx moderngov-test --config /Users/me/sites/example.moderngov.json
+```
+
 Everything can also be passed inline:
 
 ```bash
 npx moderngov-test \
-  --moderngovUrl https://westsussex.moderngov.co.uk \
-  --localDevUrl https://west-sussex-lgd.lndo.site/moderngov-template \
+  --moderngovUrl https://example.moderngov.co.uk \
+  --localDevUrl https://example.lndo.site/moderngov-template \
   --breadcrumbSelector ".nav--breadcrumbs ol" \
   --contentSelector "article.editor-content" \
   --sidenavSelector ".list.list--iconned" \
@@ -121,8 +149,8 @@ random free one and prints the URL it ended up on:
 
 ```
 moderngov-test is running on http://localhost:8000
-  ModernGov site:  https://westsussex.moderngov.co.uk
-  Local template:  https://west-sussex-lgd.lndo.site/moderngov-template
+  ModernGov site:  https://example.moderngov.co.uk
+  Local template:  https://examplelgd.lndo.site/moderngov-template
 ```
 
 Open `http://localhost:8000/` and append any path from the live ModernGov site,
@@ -133,7 +161,10 @@ for example
 
 For every incoming `GET` request:
 
-1. The same path is requested from `moderngovUrl`.
+1. The same path is requested from `moderngovUrl` with
+   [impit](https://github.com/apify/impit), which impersonates Chrome. A plain
+   `fetch` is fingerprinted as a bot and gets served a Cloudflare challenge
+   instead of the page.
 2. Non-HTML responses (images, CSS, downloads) are redirected straight to the
    live site.
 3. The HTML is parsed with [cheerio](https://cheerio.js.org/) and the configured
@@ -142,16 +173,17 @@ For every incoming `GET` request:
    ModernGov site point back at `localhost` so browsing stays inside the test
    app, while assets, external links and form actions are absolutised against
    the live site.
-5. The template from `localDevUrl` is fetched, the optional `moderngovAssets`
-   are injected into its `<head>`, and the placeholders are replaced.
+5. The template from `localDevUrl` is fetched, the ModernGov stylesheets and
+   scripts found on the live page are injected into its `<head>` (plus anything
+   listed in `moderngovAssets`), and the placeholders are replaced.
 
 ## Notes and limitations
 
 - Only `GET` and `HEAD` requests are served; anything else returns `405`. Form
   postbacks are left pointing at the live ModernGov site.
-- TLS certificate verification is disabled so that local development sites with
-  self-signed certificates (Lando, DDEV, …) can be used as the template source.
-  This is a development-only tool — do not deploy it.
+- TLS certificate verification is disabled (`ignoreTlsErrors`) so that local
+  development sites with self-signed certificates (Lando, DDEV, …) can be used
+  as the template source. This is a development-only tool — do not deploy it.
 - Nothing is cached: every request hits both the live site and the local
   template.
 - If the live site or the local template cannot be reached, the response is a

@@ -19,14 +19,26 @@ const SELECTOR_OPTIONS = [
   'sidenavSelector',
 ];
 
-const OPTIONAL_OPTIONS = [...SELECTOR_OPTIONS, 'moderngovAssets'];
+const OPTIONAL_OPTIONS = [...SELECTOR_OPTIONS, 'moderngovAssets', 'config'];
+
+const isEmpty = (value) => {
+  if (value === undefined || value === null) return true;
+  if (typeof value === 'string') return value.trim() === '';
+  return false;
+};
 
 /**
- * Reads config.json from the package root.
+ * Reads the config file: config.json from the package root by default, or the
+ * file given inline with --config.
  * The file is optional: every value can also be passed inline.
  */
-const readConfigFile = (root = PACKAGE_ROOT) => {
-  const configPath = path.join(root, CONFIG_FILE);
+const readConfigFile = (root = PACKAGE_ROOT, configFile = null) => {
+  // A path typed on the command line is resolved from the working directory,
+  // like any other path would be. The implicit config.json stays at the package
+  // root, next to config.json.dist.
+  const configPath = isEmpty(configFile)
+    ? path.join(root, CONFIG_FILE)
+    : path.resolve(process.cwd(), String(configFile).trim());
 
   if (!fs.existsSync(configPath)) {
     return {};
@@ -40,12 +52,6 @@ const readConfigFile = (root = PACKAGE_ROOT) => {
       `Copy ${CONFIG_FILE}.dist to ${CONFIG_FILE} and fill it in.`
     );
   }
-};
-
-const isEmpty = (value) => {
-  if (value === undefined || value === null) return true;
-  if (typeof value === 'string') return value.trim() === '';
-  return false;
 };
 
 const toAssetList = (value) => {
@@ -80,7 +86,7 @@ const normaliseUrl = (value, option) => {
  * Inline options always win; anything missing must come from config.json.
  */
 export const resolveOptions = (cliOptions = {}, root = PACKAGE_ROOT) => {
-  const config = readConfigFile(root);
+  const config = readConfigFile(root, cliOptions['config']);
   const resolved = {};
 
   for (const option of [...REQUIRED_OPTIONS, ...OPTIONAL_OPTIONS]) {

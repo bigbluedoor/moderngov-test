@@ -10,6 +10,7 @@ program
   .version('1.0.0');
 
 program
+  .option('-c, --config <file>', 'Config.json file path')
   .option('--moderngovUrl <url>', 'The URL of the live ModernGov site.')
   .option('--localDevUrl <url>', 'The URL of the local development site\'s template for ModernGov.')
   .option('--pagetitleSelector <selector>', 'The css selector of the element containing the pagetitle on the live ModernGov site.')
