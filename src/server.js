@@ -1,21 +1,9 @@
 import express from 'express';
-import { Impit } from 'impit';
+
 import { autoInjectAssets, extractSections, injectAssets, renderTemplate } from './transform.js';
+import { fetchPage, isHtml } from './utils.js';
 
 const DEFAULT_PORT = 8000;
-
-const isHtml = (response) =>
-  (response.headers.get('content-type') || '').toLowerCase().includes('html');
-
-const fetchPage = async (url) => {
-  const impit = new Impit({
-      browser: "chrome",
-      ignoreTlsErrors: true,
-  });
-  const response = await impit.fetch(url);
-
-  return response;
-};
 
 export const createApp = (options) => {
   const app = express();
@@ -92,7 +80,7 @@ export const createApp = (options) => {
 };
 
 /**
- * Listens on port 3000, falling back to a random free port when it is taken.
+ * Listens on DEFAULT_PORT, falling back to a random free port when it is taken.
  */
 export const listen = (app, port = DEFAULT_PORT) =>
   new Promise((resolve, reject) => {

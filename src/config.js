@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { isEmpty } from './utils.js';
 
 const CONFIG_FILE = 'config.json';
 
@@ -20,12 +21,6 @@ const SELECTOR_OPTIONS = [
 ];
 
 const OPTIONAL_OPTIONS = [...SELECTOR_OPTIONS, 'moderngovAssets', 'config'];
-
-const isEmpty = (value) => {
-  if (value === undefined || value === null) return true;
-  if (typeof value === 'string') return value.trim() === '';
-  return false;
-};
 
 /**
  * Reads the config file: config.json from the package root by default, or the

@@ -1,27 +1,10 @@
 import * as cheerio from 'cheerio';
 
+import { isNavigable, isSameSite, resolveUrl } from './utils.js';
+
 // Attributes that point at assets rather than pages: they keep pointing at the
 // live ModernGov site so images, styles and scripts still resolve.
 const ASSET_ATTRIBUTES = ['src', 'poster', 'data-src'];
-
-const isSameSite = (url, moderngovUrl) => {
-  const site = new URL(moderngovUrl);
-  return url.protocol === site.protocol && url.host === site.host;
-};
-
-const resolve = (value, base) => {
-  try {
-    return new URL(value, base);
-  } catch {
-    return null;
-  }
-};
-
-const isNavigable = (value) =>
-  value !== undefined &&
-  value !== null &&
-  value.trim() !== '' &&
-  !/^(#|javascript:|mailto:|tel:|data:)/i.test(value.trim());
 
 /**
  * Rewrites URLs inside an extracted snippet.
@@ -35,7 +18,7 @@ const rewriteUrls = ($, moderngovUrl, localBase) => {
     const href = $(element).attr('href');
     if (!isNavigable(href)) return;
 
-    const url = resolve(href, moderngovUrl);
+    const url = resolveUrl(href, moderngovUrl);
     if (!url) return;
 
     if (isSameSite(url, moderngovUrl)) {
@@ -50,7 +33,7 @@ const rewriteUrls = ($, moderngovUrl, localBase) => {
     if (!isNavigable(action)) return;
 
     // Postbacks are left on the live site: the test app only serves GET pages.
-    const url = resolve(action, moderngovUrl);
+    const url = resolveUrl(action, moderngovUrl);
     if (url) $(element).attr('action', url.toString());
   });
 
@@ -59,13 +42,13 @@ const rewriteUrls = ($, moderngovUrl, localBase) => {
       const value = $(element).attr(attribute);
       if (!isNavigable(value)) return;
 
-      const url = resolve(value, moderngovUrl);
+      const url = resolveUrl(value, moderngovUrl);
       if (url) $(element).attr(attribute, url.toString());
     });
   }
 
   $('link[href]').each((_, element) => {
-    const url = resolve($(element).attr('href'), moderngovUrl);
+    const url = resolveUrl($(element).attr('href'), moderngovUrl);
     if (url) $(element).attr('href', url.toString());
   });
 
@@ -75,7 +58,7 @@ const rewriteUrls = ($, moderngovUrl, localBase) => {
       .split(',')
       .map((candidate) => {
         const [value, ...descriptors] = candidate.trim().split(/\s+/);
-        const url = resolve(value, moderngovUrl);
+        const url = resolveUrl(value, moderngovUrl);
         return [url ? url.toString() : value, ...descriptors].join(' ');
       })
       .join(', ');
@@ -138,7 +121,7 @@ export const autoInjectAssets = (html, remoteHtml, moderngovUrl) => {
     const value = $(element).attr(isScript ? 'src' : 'href');
     if (!isNavigable(value)) return;
 
-    const url = resolve(value, moderngovUrl);
+    const url = resolveUrl(value, moderngovUrl);
     if (url) assets.push(url.toString());
   });
 
@@ -152,7 +135,7 @@ export const injectAssets = (html, assets, moderngovUrl) => {
   if (!assets || assets.length === 0) return html;
 
   const tags = assets
-    .map((asset) => resolve(asset, moderngovUrl))
+    .map((asset) => resolveUrl(asset, moderngovUrl))
     .filter(Boolean)
     .map((url) => assetTag(url.toString()))
     .join('\n');
