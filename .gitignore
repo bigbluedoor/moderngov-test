@@ -128,6 +128,9 @@ dist
 # pnpm
 .pnpm-store
 
+#npm
+package-lock.json
+
 # yarn v3
 .pnp.*
 .yarn/*
@@ -136,11 +139,6 @@ dist
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-
-# Vite files
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
-.vite/
 
 
 #config file

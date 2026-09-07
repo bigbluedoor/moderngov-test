@@ -1,5 +1,5 @@
 import express from 'express';
-
+import { Impit } from 'impit';
 import { autoInjectAssets, extractSections, injectAssets, renderTemplate } from './transform.js';
 
 const DEFAULT_PORT = 8000;
@@ -8,12 +8,11 @@ const isHtml = (response) =>
   (response.headers.get('content-type') || '').toLowerCase().includes('html');
 
 const fetchPage = async (url) => {
-  process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-
-  const response = await fetch(url, {
-    redirect: 'follow',
-    headers: { 'user-agent': 'moderngov-test' },
+  const impit = new Impit({
+      browser: "chrome",
+      ignoreTlsErrors: true,
   });
+  const response = await impit.fetch(url);
 
   return response;
 };
