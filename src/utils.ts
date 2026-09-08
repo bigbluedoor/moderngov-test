@@ -1,4 +1,5 @@
 import { Impit, type ImpitResponse, type RequestInit } from 'impit';
+import { CookieJar } from 'tough-cookie';
 
 /** URL schemes that never point at a page worth rewriting. */
 const NON_NAVIGABLE = /^(#|javascript:|mailto:|tel:|data:)/i;
@@ -97,14 +98,20 @@ export const errorMessage = (error: unknown): string =>
 
 /**
  * One client for the whole process. It impersonates Chrome because a plain
- * fetch is fingerprinted as a bot and served a Cloudflare challenge, and it
- * keeps any clearance cookies — including the ASP.NET session — between
- * requests. TLS errors are ignored so that local dev sites with self-signed
- * certificates (Lando, DDEV, …) can be used as the template source.
+ * fetch is fingerprinted as a bot and served a Cloudflare challenge. TLS errors
+ * are ignored so that local dev sites with self-signed certificates (Lando,
+ * DDEV, …) can be used as the template source.
+ *
+ * The cookie jar is not optional. impit stores nothing without one, so every
+ * request would arrive at ModernGov as a brand new visitor: a fresh
+ * ASP.NET_SessionId each time, a {breadcrumb} that never grows past the current
+ * page — it is built from the last five pages visited in the session — and
+ * postbacks that lose the state they were meant to act on.
  */
 const impit = new Impit({
   browser: 'chrome',
   ignoreTlsErrors: true,
+  cookieJar: new CookieJar(),
 });
 
 /**

@@ -116,6 +116,19 @@ containing placeholders where the ModernGov markup should go:
 snippets matched by the corresponding selectors. Matching is case-insensitive
 and tolerates whitespace (`{ content }` works too).
 
+Each selector contributes the **contents** of the element it matches, not the
+element itself, which is how ModernGov behaves on the live site: the template
+owns the wrapper markup and only the items come from ModernGov. So
+`breadcrumbSelector: ".nav--breadcrumbs ol"` yields the `<li>` items, and the
+`<ol>` around `{breadcrumb}` belongs in your template. Point a selector at the
+container whose insides you want.
+
+Note that ModernGov builds the breadcrumb from the last five pages visited in
+the session, not from the page's position in a hierarchy. It therefore grows as
+you browse: landing straight on a councillor page shows one item, reaching it
+from the councillor index shows two. The test app keeps a session for exactly
+this reason, so the trail behaves as it does in a browser.
+
 ## Usage
 
 With `config.json` in place:
@@ -167,8 +180,8 @@ For every incoming request:
    instead of the page.
 2. Non-HTML responses (images, CSS, downloads) are redirected straight to the
    live site.
-3. The HTML is parsed with [cheerio](https://cheerio.js.org/) and the configured
-   selectors are extracted.
+3. The HTML is parsed with [cheerio](https://cheerio.js.org/) and the contents
+   of the elements matched by the configured selectors are extracted.
 4. URLs inside the extracted snippets are rewritten: links and form actions
    pointing at the live ModernGov site come back to `localhost` so browsing
    stays inside the test app, while assets and external links are absolutised
@@ -184,8 +197,8 @@ requests carrying a `__VIEWSTATE` field. These are proxied too:
 
 - the raw body is forwarded byte for byte with its original content type, so
   `__VIEWSTATE` and file uploads survive intact;
-- one HTTP client is shared for the life of the process, so the ASP.NET session
-  cookie is kept between requests;
+- one HTTP client, with one cookie jar, is shared for the life of the process,
+  so the `ASP.NET_SessionId` is kept between requests;
 - ASP.NET answers most postbacks with a redirect — the browser is sent on to
   the local URL for the new page, so the address bar keeps up;
 - when a postback returns something that is not a page (an iCal feed, a

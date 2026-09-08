@@ -111,6 +111,11 @@ const rewriteUrls = ($: CheerioAPI, context: RewriteContext): void => {
  * Pulls the configured sections out of a live ModernGov page and rewrites their
  * URLs for local browsing.
  *
+ * Each selector contributes the *contents* of the elements it matches, not the
+ * elements themselves, so the local template keeps ownership of the wrapper
+ * markup. Point `breadcrumbSelector` at the live site's `<ol>` and the section
+ * is its `<li>` items.
+ *
  * @param html - The page as served by the live site.
  * @param options - Selectors to extract, plus the URLs used to rewrite them.
  * @returns One snippet per section. A selector that is empty or matches
@@ -132,10 +137,13 @@ export const extractSections = (html: string, options: ExtractOptions): Sections
       continue;
     }
 
+    // The contents, not the element itself: the local template owns the
+    // wrapper, exactly as it does on the live site. A {breadcrumb} inside the
+    // template's own <ol> yields the <li> items, not a second nested list.
     const snippet = cheerio.load(
       matched
-        .map((_, element) => $.html(element))
-        .get()
+        .toArray()
+        .map((element) => $(element).html() ?? '')
         .join('\n'),
       null,
       false
