@@ -12,7 +12,8 @@ development site.
 Browsing `http://localhost:8000/<any-moderngov-path>` then shows the real
 ModernGov content wrapped in your local template, with links rewritten so you
 can keep clicking around without leaving the test app.
-***NOTE:*** When the port 8000 is already in use, the tool pick up the first one available.
+
+***NOTE:*** If port 8000 is taken, a free port is picked and printed.
 
 ## Installation
 
@@ -30,7 +31,7 @@ npm install -g @bigbluedoor/moderngov-test
 moderngov-test --help
 ```
 
-Requires Node 20 or later.
+Requires Node 22.12 or later.
 
 ### From a clone
 
@@ -65,11 +66,12 @@ from:
 <!-- modern.gov reverse CMS: https://www.example.gov.uk/template/mg-external.html -->
 ```
 
-`setup` reads that comment, fetches the template, and finds the element
+`setup` reads that comment, fetches that reverse CMS template, and finds the element
 holding each of `{pagetitle}`, `{breadcrumb}`, `{content}` and `{sidenav}`. It
 then builds the shortest CSS selector that matches only that element. Because
 extraction takes an element's contents, the element around a placeholder is
-the right thing to point at. `localDevUrl` is written to the file unchanged.
+the right thing to point at. `localDevUrl` is written as given, without
+checking it.
 
 It prints the selectors it found and warns when:
 
@@ -87,7 +89,8 @@ It prints the selectors it found and warns when:
 
 ### Writing it by hand
 
-Copy the distributed config and fill it in:
+Create `config.json` with the shape below. From a clone, you can start from
+the distributed copy:
 
 ```bash
 cp config.json.dist config.json
@@ -115,8 +118,9 @@ cp config.json.dist config.json
 | `sidenavSelector` | no | CSS selector for the side navigation on the live site. |
 | `moderngovAssets` | no | List of ModernGov assets (CSS/JS) to inject into the template `<head>`. |
 
-***NOTE:*** at least one of `pagetitleSelector`, `breadcrumbSelector`, `contentSelector`, `sidenavSelector`
-is required to see the local template working.
+***NOTE:*** with no selectors set, every placeholder renders empty, so set at
+least one of `pagetitleSelector`, `breadcrumbSelector`, `contentSelector` or
+`sidenavSelector` to see ModernGov content in the template.
 
 ***NOTE:*** `moderngovAssets` is rarely needed: the app autodiscovers the assets
 delivered by ModernGov on the fetched page. Use this setting when autodiscovery
@@ -189,7 +193,9 @@ With `config.json` in place:
 
 ```bash
 npx @bigbluedoor/moderngov-test
-# or
+# installed globally
+moderngov-test
+# from a clone
 npm start
 ```
 
@@ -217,7 +223,7 @@ random free one and prints the URL it ended up on:
 ```
 moderngov-test is running on http://localhost:8000
   ModernGov site:  https://example.moderngov.co.uk
-  Local template:  https://examplelgd.lndo.site/moderngov-template
+  Local template:  https://example.lndo.site/moderngov-template
 ```
 
 Open `http://localhost:8000/` and append any path from the live ModernGov site,
@@ -280,7 +286,7 @@ requests carrying a `__VIEWSTATE` field. These are proxied too:
 ## Development
 
 The source lives in `src/` and is compiled to `dist/`, which is what the `bin`
-entry and `main` point at. `dist/` is generated — never edit it, and never
+entry points at. `dist/` is generated — never edit it, and never
 commit it.
 
 | Command | Does |
@@ -313,6 +319,7 @@ npm version patch   # or minor / major; --version reads it from package.json
 npm publish
 ```
 
+`npm version` commits and tags the bump, so it needs a clean working tree.
 `prepublishOnly` wipes `dist/` and lints, then `prepare` rebuilds, so only fresh
 output ships. The package contains just the compiled JavaScript,
 `config.json.dist` and this README. `npm pack --dry-run` lists what would go
@@ -321,4 +328,6 @@ publish for free.
 
 ## License
 
-ISC © Marco Pagliarulo
+MIT © [Big Blue Door Limited](https://www.bigbluedoor.net/)
+
+Maintained by Marco Pagliarulo.

@@ -10,7 +10,7 @@
     "config.json.dist"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "publishConfig": {
     "access": "public"
@@ -39,8 +39,17 @@
     "drupal",
     "template"
   ],
-  "author": "Marco Pagliarulo",
-  "license": "ISC",
+  "author": {
+    "name": "Big Blue Door Limited",
+    "url": "https://www.bigbluedoor.net/"
+  },
+  "maintainers": [
+    {
+      "name": "Marco Pagliarulo",
+      "url": "https://www.npmjs.com/~marcopagliarulo"
+    }
+  ],
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/bigbluedoor/moderngov-test/issues"
   },
