@@ -1,9 +1,9 @@
-# moderngov-test
+# @bigbluedoor/moderngov-test
 
 Utility package useful to test ModernGov template implementation.
 
 ModernGov is hosted separately from the main site, so you cannot preview a
-committee page inside your local theme until the template is live. This
+ModernGov page inside your local theme until the template is live. This
 tool bridges that gap: it runs a small local proxy that fetches a page from the
 live ModernGov site, extracts the parts that matter (pagetitle, breadcrumb,
 content, sidenav) and drops them into the template served by your local
@@ -12,30 +12,37 @@ development site.
 Browsing `http://localhost:8000/<any-moderngov-path>` then shows the real
 ModernGov content wrapped in your local template, with links rewritten so you
 can keep clicking around without leaving the test app.
+***NOTE:*** When the port 8000 is already in use, the tool pick up the first one available.
 
 ## Installation
+
+Run it without installing, from the folder you want `config.json` in:
+
+```bash
+npx @bigbluedoor/moderngov-test setup --moderngovUrl … --localDevUrl …
+npx @bigbluedoor/moderngov-test
+```
+
+Or install it as a global command:
+
+```bash
+npm install -g @bigbluedoor/moderngov-test
+moderngov-test --help
+```
+
+Requires Node 20 or later.
+
+### From a clone
+
 ```bash
 git clone git@github.com:bigbluedoor/moderngov-test.git
-```
-
-```bash
+cd moderngov-test
 npm install
-```
-
-```bash
 npm start -- --help
 ```
 
-Or use NPM link to run it straight from the repository as a CLI:
-Run once
-```bash
-npm link
-```
-
-Then
-```bash
-moderngov-test --help
-```
+`npm link` puts the clone on your `PATH` as `moderngov-test`, so changes are
+picked up without publishing.
 
 ## Configuration
 
@@ -44,11 +51,11 @@ moderngov-test --help
 The quickest way to a working `config.json` is to let the tool write it:
 
 ```bash
-npm run setup -- \
+npx @bigbluedoor/moderngov-test setup \
   --moderngovUrl https://example.moderngov.co.uk \
   --localDevUrl https://example.lndo.site/moderngov-template
-# or, once linked
-moderngov-test setup --moderngovUrl … --localDevUrl …
+# installed globally: moderngov-test setup …
+# from a clone:       npm run setup -- …
 ```
 
 Every ModernGov page ends with a comment naming the template it is built
@@ -75,7 +82,7 @@ It prints the selectors it found and warns when:
 | --- | --- |
 | `--moderngovUrl <url>` | Required. Full URL of the live ModernGov site. |
 | `--localDevUrl <url>` | Required. Full URL of the local template. |
-| `-c, --config <file>` | Where to write. Defaults to `config.json` at the package root. |
+| `-c, --config <file>` | Where to write. Defaults to `config.json` in the current directory. |
 | `-f, --force` | Overwrite the file if it already exists. |
 
 ### Writing it by hand
@@ -121,16 +128,19 @@ render as an empty string.
 
 ### Where the config file is read from
 
-By default the tool looks for `config.json` at the package root, next to
-`config.json.dist`. A different file can be pointed at with `-c` / `--config`,
-which is a CLI-only option (it has no meaning inside the JSON):
+By default the tool looks for `config.json` in the directory you run the
+command in, and `setup` writes it there too. That makes a folder per site the
+natural layout. From a clone, `npm start` and `npm run setup` run in the
+package root, so the file sits next to `config.json.dist`.
+
+A different file can be pointed at with `-c` / `--config`, which is a CLI-only
+option (it has no meaning inside the JSON):
 
 ```bash
 moderngov-test --config /Users/me/sites/example.moderngov.json
 ```
 
-This is the practical way to keep one config per site outside the package —
-handy when `moderngov-test` is installed globally via `npm link`.
+This is the practical way to keep several site configs in one place.
 
 Absolute paths are used as given; relative paths are resolved from the directory
 you run the command in, so this works from anywhere:
@@ -178,7 +188,7 @@ this reason, so the trail behaves as it does in a browser.
 With `config.json` in place:
 
 ```bash
-npx moderngov-test
+npx @bigbluedoor/moderngov-test
 # or
 npm start
 ```
@@ -186,13 +196,13 @@ npm start
 With a config file kept somewhere else:
 
 ```bash
-npx moderngov-test --config /Users/me/sites/example.moderngov.json
+npx @bigbluedoor/moderngov-test --config /Users/me/sites/example.moderngov.json
 ```
 
 Everything can also be passed inline:
 
 ```bash
-npx moderngov-test \
+npx @bigbluedoor/moderngov-test \
   --moderngovUrl https://example.moderngov.co.uk \
   --localDevUrl https://example.lndo.site/moderngov-template \
   --breadcrumbSelector ".nav--breadcrumbs ol" \
@@ -295,6 +305,19 @@ import { isEmpty } from './utils.js'; // resolves to ./utils.ts, emits ./utils.j
 ESLint runs typescript-eslint's type-aware rules over `src/`. The only
 JavaScript left in the repo is tooling — `eslint.config.js` itself — which sits
 outside the tsconfig project and is linted without those rules.
+
+### Publishing
+
+```bash
+npm version patch   # or minor / major; --version reads it from package.json
+npm publish
+```
+
+`prepublishOnly` wipes `dist/` and lints, then `prepare` rebuilds, so only fresh
+output ships. The package contains just the compiled JavaScript,
+`config.json.dist` and this README. `npm pack --dry-run` lists what would go
+out. `publishConfig.access` is `public`, which a scoped package needs to
+publish for free.
 
 ## License
 

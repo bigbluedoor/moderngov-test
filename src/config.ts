@@ -1,15 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 import { errorMessage, isEmpty, isPlainObject } from './utils.js';
 
+// config.json is looked for in the directory the command runs in.
 const CONFIG_FILE = 'config.json';
-
-// config.json lives at the package root, next to config.json.dist — not in
-// src/. src/ maps onto dist/ one for one, so this holds before and after the
-// TypeScript build.
-const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const REQUIRED_OPTIONS = ['moderngovUrl', 'localDevUrl'] as const;
 
@@ -45,14 +40,14 @@ export type Options = Record<SelectorOption, string> & {
 /**
  * Works out which config file is meant.
  *
- * @param root - Package root, where the implicit `config.json` lives.
+ * @param root - Directory the implicit `config.json` lives in.
  * @param configFile - Path from `--config`. Absolute paths are used as given,
  * relative ones resolve from the working directory, the way a path typed on the
  * command line is expected to.
  * @returns The absolute path of the config file, which may not exist yet.
  */
 export const resolveConfigPath = (
-  root: string = PACKAGE_ROOT,
+  root: string = process.cwd(),
   configFile?: string
 ): string =>
   isEmpty(configFile)
@@ -65,13 +60,13 @@ export const resolveConfigPath = (
  * The file is optional at both locations: every value can also be passed
  * inline, so a missing file yields no values rather than an error.
  *
- * @param root - Package root, where the implicit `config.json` lives.
+ * @param root - Directory the implicit `config.json` lives in.
  * @param configFile - Path from `--config`, see {@link resolveConfigPath}.
  * @returns The parsed object, or `{}` when there is no file to read.
  * @throws If the file exists but does not contain a JSON object.
  */
 const readConfigFile = (
-  root: string = PACKAGE_ROOT,
+  root: string = process.cwd(),
   configFile?: string
 ): Record<string, unknown> => {
   const configPath = resolveConfigPath(root, configFile);
@@ -153,13 +148,13 @@ export const normaliseUrl = (value: unknown, option: string): string => {
  * nothing rather than failing.
  *
  * @param cliOptions - Options as parsed by commander.
- * @param root - Package root, overridable for testing.
+ * @param root - Directory the implicit `config.json` lives in, overridable for testing.
  * @returns The options the server runs on.
  * @throws If a required option is missing or a URL option is malformed.
  */
 export const resolveOptions = (
   cliOptions: CliOptions = {},
-  root: string = PACKAGE_ROOT
+  root: string = process.cwd()
 ): Options => {
   const config = readConfigFile(root, cliOptions.config);
   const inline = cliOptions as Record<string, unknown>;

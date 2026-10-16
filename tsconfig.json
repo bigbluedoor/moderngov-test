@@ -1,19 +1,10 @@
 {
   "compilerOptions": {
-    /* The package is ESM ("type": "module") and runs on Node. NodeNext keeps
-       the emitted import specifiers exactly as written, which is why relative
-       imports must carry a .js extension even in .ts files:
-           import { isEmpty } from './utils.js';   // resolves to ./utils.ts */
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "es2023",
     "lib": ["es2023"],
     "types": ["node"],
-
-    /* src/ maps straight onto dist/, so src/index.ts becomes dist/index.js.
-       Keeping the depth the same matters: config.js finds the package root by
-       going one level up from its own directory, which works from src/ before
-       the build and from dist/ after it. */
     "rootDir": "src",
     "outDir": "dist",
 

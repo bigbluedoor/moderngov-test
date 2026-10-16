@@ -1,18 +1,19 @@
 {
   "name": "@bigbluedoor/moderngov-test",
   "version": "1.0.0",
-  "description": "Utility package usefull to test moderngov template implementation.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "Utility package useful to test ModernGov template implementation.",
   "bin": {
     "moderngov-test": "dist/index.js"
   },
   "files": [
-    "dist",
+    "dist/**/*.js",
     "config.json.dist"
   ],
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc && node -e \"require('fs').chmodSync('dist/index.js', 0o755)\"",
@@ -24,7 +25,8 @@
     "start": "npm run build && node dist/index.js",
     "setup": "npm run build && node dist/index.js setup",
     "prepare": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run clean && npm run lint"
   },
   "type": "module",
   "repository": {

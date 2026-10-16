@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createRequire } from 'module';
 import { program } from 'commander';
 
 import { resolveOptions, type CliOptions, type Options } from './config.js';
@@ -6,10 +7,12 @@ import { createApp, listen, portOf } from './server.js';
 import { setup, type SetupOptions } from './setup.js';
 import { errorMessage } from './utils.js';
 
+const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+
 program
   .name('moderngov-test')
-  .description('Utility package usefull to test moderngov template implementation.')
-  .version('1.0.0')
+  .description('Utility package useful to test ModernGov template implementation.')
+  .version(version)
   .enablePositionalOptions();
 
 program
@@ -47,7 +50,7 @@ program
   .description('Writes the config file, discovering the selectors from the ModernGov reverse CMS template.')
   .requiredOption('--moderngovUrl <url>', 'The URL of the live ModernGov site.')
   .requiredOption('--localDevUrl <url>', 'The URL of the local development site\'s template for ModernGov.')
-  .option('-c, --config <file>', 'Where to write the config file. Defaults to config.json at the package root.')
+  .option('-c, --config <file>', 'Where to write the config file. Defaults to config.json in the current directory.')
   .option('-f, --force', 'Overwrite the config file if it already exists.')
   .action(async (setupOptions: SetupOptions) => {
     try {
