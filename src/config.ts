@@ -43,15 +43,30 @@ export type Options = Record<SelectorOption, string> & {
 };
 
 /**
+ * Works out which config file is meant.
+ *
+ * @param root - Package root, where the implicit `config.json` lives.
+ * @param configFile - Path from `--config`. Absolute paths are used as given,
+ * relative ones resolve from the working directory, the way a path typed on the
+ * command line is expected to.
+ * @returns The absolute path of the config file, which may not exist yet.
+ */
+export const resolveConfigPath = (
+  root: string = PACKAGE_ROOT,
+  configFile?: string
+): string =>
+  isEmpty(configFile)
+    ? path.join(root, CONFIG_FILE)
+    : path.resolve(process.cwd(), String(configFile).trim());
+
+/**
  * Reads the config file.
  *
  * The file is optional at both locations: every value can also be passed
  * inline, so a missing file yields no values rather than an error.
  *
  * @param root - Package root, where the implicit `config.json` lives.
- * @param configFile - Path from `--config`. Absolute paths are used as given,
- * relative ones resolve from the working directory, the way a path typed on the
- * command line is expected to.
+ * @param configFile - Path from `--config`, see {@link resolveConfigPath}.
  * @returns The parsed object, or `{}` when there is no file to read.
  * @throws If the file exists but does not contain a JSON object.
  */
@@ -59,9 +74,7 @@ const readConfigFile = (
   root: string = PACKAGE_ROOT,
   configFile?: string
 ): Record<string, unknown> => {
-  const configPath = isEmpty(configFile)
-    ? path.join(root, CONFIG_FILE)
-    : path.resolve(process.cwd(), String(configFile).trim());
+  const configPath = resolveConfigPath(root, configFile);
 
   if (!fs.existsSync(configPath)) {
     return {};
@@ -116,7 +129,7 @@ const toAssetList = (value: unknown): string[] => {
  * @returns The URL as a string, without a trailing slash.
  * @throws If the value is not a full http(s) URL.
  */
-const normaliseUrl = (value: unknown, option: string): string => {
+export const normaliseUrl = (value: unknown, option: string): string => {
   let url: URL;
 
   try {
@@ -180,4 +193,4 @@ export const resolveOptions = (
   };
 };
 
-export { REQUIRED_OPTIONS, OPTIONAL_OPTIONS };
+export { REQUIRED_OPTIONS, OPTIONAL_OPTIONS, SELECTOR_OPTIONS };

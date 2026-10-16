@@ -3,12 +3,14 @@ import { program } from 'commander';
 
 import { resolveOptions, type CliOptions, type Options } from './config.js';
 import { createApp, listen, portOf } from './server.js';
+import { setup, type SetupOptions } from './setup.js';
 import { errorMessage } from './utils.js';
 
 program
   .name('moderngov-test')
   .description('Utility package usefull to test moderngov template implementation.')
-  .version('1.0.0');
+  .version('1.0.0')
+  .enablePositionalOptions();
 
 program
   .option('-c, --config <file>', 'Config.json file path')
@@ -37,6 +39,30 @@ program
       console.log(`  Local template:  ${options.localDevUrl}`);
     } catch (error) {
       program.error(`Unable to start the server: ${errorMessage(error)}`, { exitCode: 1 });
+    }
+  });
+
+program
+  .command('setup')
+  .description('Writes the config file, discovering the selectors from the ModernGov reverse CMS template.')
+  .requiredOption('--moderngovUrl <url>', 'The URL of the live ModernGov site.')
+  .requiredOption('--localDevUrl <url>', 'The URL of the local development site\'s template for ModernGov.')
+  .option('-c, --config <file>', 'Where to write the config file. Defaults to config.json at the package root.')
+  .option('-f, --force', 'Overwrite the config file if it already exists.')
+  .action(async (setupOptions: SetupOptions) => {
+    try {
+      const result = await setup(setupOptions);
+
+      console.log(`Reverse CMS template: ${result.templateUrl}`);
+      for (const [option, selector] of Object.entries(result.selectors)) {
+        console.log(`  ${option}: ${selector === '' ? '(empty)' : selector}`);
+      }
+      for (const warning of result.warnings) {
+        console.warn(`⚠ ${warning}`);
+      }
+      console.log(`Config written to ${result.configPath}`);
+    } catch (error) {
+      program.error(`Setup failed: ${errorMessage(error)}`, { exitCode: 1 });
     }
   });
 

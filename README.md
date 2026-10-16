@@ -3,7 +3,7 @@
 Utility package useful to test ModernGov template implementation.
 
 ModernGov is hosted separately from the main site, so you cannot preview a
-committee page inside your local Drupal theme until the template is live. This
+committee page inside your local theme until the template is live. This
 tool bridges that gap: it runs a small local proxy that fetches a page from the
 live ModernGov site, extracts the parts that matter (pagetitle, breadcrumb,
 content, sidenav) and drops them into the template served by your local
@@ -39,6 +39,47 @@ moderngov-test --help
 
 ## Configuration
 
+### Generating it with `setup`
+
+The quickest way to a working `config.json` is to let the tool write it:
+
+```bash
+npm run setup -- \
+  --moderngovUrl https://example.moderngov.co.uk \
+  --localDevUrl https://example.lndo.site/moderngov-template
+# or, once linked
+moderngov-test setup --moderngovUrl … --localDevUrl …
+```
+
+Every ModernGov page ends with a comment naming the template it is built
+from:
+
+```html
+<!-- modern.gov reverse CMS: https://www.example.gov.uk/template/mg-external.html -->
+```
+
+`setup` reads that comment, fetches the template, and finds the element
+holding each of `{pagetitle}`, `{breadcrumb}`, `{content}` and `{sidenav}`. It
+then builds the shortest CSS selector that matches only that element. Because
+extraction takes an element's contents, the element around a placeholder is
+the right thing to point at. `localDevUrl` is written to the file unchanged.
+
+It prints the selectors it found and warns when:
+
+- a placeholder is not in the template, so its selector is left empty;
+- a selector matches nothing on the live page, so it needs checking by hand;
+- `{pagetitle}` only appears in `<title>`. The selector then brings along the
+  text around it, such as the site name after the page title.
+
+| Option | Description |
+| --- | --- |
+| `--moderngovUrl <url>` | Required. Full URL of the live ModernGov site. |
+| `--localDevUrl <url>` | Required. Full URL of the local template. |
+| `-c, --config <file>` | Where to write. Defaults to `config.json` at the package root. |
+| `-f, --force` | Overwrite the file if it already exists. |
+
+### Writing it by hand
+
 Copy the distributed config and fill it in:
 
 ```bash
@@ -66,6 +107,9 @@ cp config.json.dist config.json
 | `contentSelector` | no | CSS selector for the main content on the live site. |
 | `sidenavSelector` | no | CSS selector for the side navigation on the live site. |
 | `moderngovAssets` | no | List of ModernGov assets (CSS/JS) to inject into the template `<head>`. |
+
+***NOTE:*** at least one of `pagetitleSelector`, `breadcrumbSelector`, `contentSelector`, `sidenavSelector`
+is required to see the local template working.
 
 ***NOTE:*** `moderngovAssets` is rarely needed: the app autodiscovers the assets
 delivered by ModernGov on the fetched page. Use this setting when autodiscovery
